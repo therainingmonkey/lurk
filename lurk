@@ -1,0 +1,105 @@
+#!/usr/bin/env lua
+
+local colors = require "ansicolors"
+local irc = require "irc"
+local lanes = require "lanes".configure()
+local signal = require "posix.signal"
+local sleep = require "socket".sleep
+
+local linda = lanes.linda() -- used for message passing between lanes
+
+
+local USAGE = "lurk IRC client\n\tUsage: lurk SERVER PORT CHANNEL [NICK] [SSL]"
+
+local DEFAULTNICK = "lurker"
+local MAXPAD = 8
+
+local nickcolors = {
+	"%{red}",
+	"%{green}",
+	"%{yellow}",
+	"%{blue}",
+	"%{magenta}",
+	"%{cyan}",
+	"%{bright red}",
+	"%{bright green}",
+	"%{bright yellow}",
+	"%{bright blue}",
+	"%{bright magenta}",
+	"%{bright cyan}"
+}
+
+local nickpadding = ""
+
+
+local function printMessage(user, _, message)
+	-- Callback to print a message, used by  irc:hook("OnChat")
+	if user.nick:len() > nickpadding:len() then
+		nickpadding = ""
+		for _ = 1, math.min(user.nick:len(), MAXPAD) do
+			nickpadding = nickpadding .. " "
+		end
+	end
+	local chanstr = ""
+	local nickstr = "[%{bright}" .. nickcolors[(string.byte(user.nick)%12)+1] ..
+		user.nick .. "%{reset}] "
+	local padstr = nickpadding:sub(user.nick:len())
+	print(colors(chanstr .. padstr .. nickstr .. message))
+end
+
+
+local function printTopic(chan, topic)
+	-- Callback to print the channel topic, called automatically by irc:join()
+	print(colors("%{reverse}"..chan.."\n"..topic.."%{reset}\n\n"))
+end
+
+
+local function readInput()
+	while true do
+		local input = io.read()
+		if input == "/exit" then
+			os.exit()
+		end
+		linda:send("input channel", input)
+	end
+end
+
+
+local function main(args)
+	if #args < 4 then
+		print(USAGE)
+	else
+		local server = args[1]
+		local port = args[2]
+		local channel = args[3]
+		local nick = args[4] or DEFAULTNICK
+		local ssl = args[5] and true or false --false if not args[5], else true
+		
+		lanes.gen("*", readInput)()
+
+		local s = irc.new{nick=nick, realname="Just lurking"}
+        s:hook("OnTopic", printTopic) -- Passes chan, message
+		s:hook("OnChat", printMessage) -- Passes user, chan, message
+		s:connect({host=server, port=port, secure=ssl})
+
+		-- Disconnect gracefully when the user presses Ctrl-C
+		signal.signal(signal.SIGINT, function(signum)
+			print("\n==quitting==\n")
+			s:disconnect()
+			os.exit(128 + signum)
+		end)
+
+		s:join(channel)
+
+		while true do
+			s:think()
+			local _, input = linda:receive(0.2, "input channel") -- 0.1s timeout
+			if input ~= nil then
+				s:sendChat(channel, input)
+			end
+		end
+	end
+end
+
+
+main({...})
