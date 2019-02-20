@@ -17,4 +17,8 @@ If you want ssl, you must specify a nick (it's actually just checking the number
 
 ## TODO:
 Prettify
+Config file
 
+## Advanced features:
+* [Save](https://en.wikipedia.org/wiki/Alias_(command%29) your favourite servers channels and nicks!
+* [Manage](https://leanpub.com/the-tao-of-tmux/read) windows, panes, sessions, persistence and multiplexing!
