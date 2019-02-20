@@ -1,5 +1,7 @@
 # Lurk - a tiny IRC client written in Lua
 
+![lurk screenshot](https://raw.githubusercontent.com/therainingmonkey/lurk/master/LurkScreenshot.png)
+
 ## Usage:
 `chmod +x lurk`
 
