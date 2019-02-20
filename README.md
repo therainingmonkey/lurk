@@ -5,7 +5,7 @@
 ## Usage:
 `chmod +x lurk`
 
-`lurk SERVER PORT CHANNEL \[NICK\] \[SSL true|false\]`
+`lurk SERVER PORT CHANNEL [NICK] [SSL true|false]`
 If you want ssl, you must specify a nick (it's actually just checking the number of args). 
 
 ## Installation
