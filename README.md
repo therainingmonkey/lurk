@@ -12,6 +12,8 @@ If you want ssl, you must specify a nick (it's actually just checking the number
 
 `sudo luarocks install luaposix`
 
+`sudo luarocks install luasocket`
+
 `sudo luarocks install --server=http://luarocks.org/dev luairc`
 
 `sudo luarocks install ansicolors`
